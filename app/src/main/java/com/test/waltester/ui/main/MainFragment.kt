@@ -10,9 +10,12 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.test.waltester.data.network.isInternetAvailable
 import com.test.waltester.databinding.FragmentMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainFragment : Fragment(), DefaultLifecycleObserver {
@@ -47,12 +50,17 @@ class MainFragment : Fragment(), DefaultLifecycleObserver {
         }
         // observe the latest countries data and send to the recycler adapter
         // diffUtil (no duplicate items).
-        viewModel.countries.observe(viewLifecycleOwner){ countyInfoList ->
-            recyclerAdapter.differ.submitList(countyInfoList)
+        viewModel.countries.observe(viewLifecycleOwner) { countyInfoList ->
+            if (!countyInfoList.isNullOrEmpty()) {
+                recyclerAdapter.differ.submitList(countyInfoList)
+            }
         }
         // only loading data once: further requirements needed.
-        if(recyclerAdapter.differ.currentList.isEmpty()) {
+        if(isInternetAvailable(context)) {
             viewModel.refreshTitle()
+        } else {
+            viewModel.fetchFromCache()
+
         }
         return binding?.root
     }

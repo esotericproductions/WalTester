@@ -6,9 +6,9 @@ import com.test.waltester.data.cache.model.CountryInfoEntity
 
 @Dao
 interface WTCountryDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertCountryInfo(countryInfo: CountryInfoEntity)
 
-    @get:Query("select distinct * from CountryInfoEntity")
-    val countryInfoLiveData: LiveData<List<CountryInfoEntity?>>
+    @get:Query("SELECT * FROM CountryInfoEntity")
+    val countryInfoLiveData: List<CountryInfoEntity>
 }

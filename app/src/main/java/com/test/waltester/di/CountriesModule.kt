@@ -31,12 +31,12 @@ object CountriesModule {
             appContext,
             WTCountriesDb::class.java,
             "wtcountriesdb"
-        ).build()
+        ).allowMainThreadQueries().build()
     }
 
     @Singleton
     @Provides
-    fun provideWTCountriesRepo(network: WTNetworker,
+    fun provideWTCountriesRepo(network: WTNetworker?,
                                dao: WTCountryDao): WTCountriesRepo{
         return WTCountriesRepo(
             network = network,
@@ -50,5 +50,5 @@ object CountriesModule {
  */
 interface WTNetworker {
     @GET("countries.json")
-    suspend fun fetchNewCountries(): WTCountryInfo
+    suspend fun fetchNewCountries(): WTCountryInfo?
 }

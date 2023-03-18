@@ -10,12 +10,12 @@ import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 
-class WTCountriesRepo @Inject constructor(val network: WTNetworker,
+class WTCountriesRepo @Inject constructor(val network: WTNetworker?,
                                           val wtCountryDao: WTCountryDao) {
 
-    private val countriesMutableLiveData = MutableLiveData<List<CountryInfoEntity?>>()
+    private val countriesMutableLiveData = MutableLiveData<List<CountryInfoEntity?>?>()
 
-    fun getCountriesInfo(): LiveData<List<CountryInfoEntity?>> {
+    fun getCountriesInfo(): LiveData<List<CountryInfoEntity?>?> {
         return countriesMutableLiveData
     }
 
@@ -30,32 +30,46 @@ class WTCountriesRepo @Inject constructor(val network: WTNetworker,
     suspend fun refreshNewCountries() {
         try {
             // fetch new data
-            val result = withTimeout(5_000) {
+            val result = withTimeout(5000) {
                 Log.d(TAG, "refreshNewCountries():")
-                network.fetchNewCountries()
+
+                network?.fetchNewCountries()
             }
+
             // map from network data model to UI consumer model
-            val newResults: List<CountryInfoEntity> = result.map { country ->
+            val newResults: List<CountryInfoEntity>? = result?.map { country ->
                     CountryInfoEntity (
-                        name = country.name,
-                        region = country.region,
-                        code = country.code,
-                        capital = country.capital
+                        name = country?.name ?: "",
+                        region = country?.region ?: "",
+                        code = country?.code ?: "",
+                        capital = country?.capital ?: ""
                     )
             }
-
-            if(newResults.isNotEmpty()) {
-                // post to vm
-                countriesMutableLiveData.postValue(newResults)
-                // insert to room db
-                newResults.forEach {
-                    wtCountryDao.insertCountryInfo(it)
-                }
+            // post to vm
+            countriesMutableLiveData.postValue(newResults)
+            // insert to room db
+            newResults?.forEach {
+                wtCountryDao.insertCountryInfo(it)
             }
-
         } catch (error: Throwable) {
             throw WTCountriesRefreshError("Unable to refresh CountryInfoEntity", error)
         }
+    }
+
+    suspend fun fetchCachedCountriesInfo() {
+        val results = withTimeout(5000) {
+            Log.d(TAG, "fetchCachedCountriesInfo():")
+            wtCountryDao.countryInfoLiveData
+        }
+        val newResults: List<CountryInfoEntity> = results.map { country ->
+            CountryInfoEntity (
+                name = country.name,
+                region = country.region,
+                code = country.code,
+                capital = country.capital
+            )
+        }
+        countriesMutableLiveData.postValue(newResults)
     }
 
     companion object {

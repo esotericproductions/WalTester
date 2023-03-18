@@ -41,6 +41,11 @@ constructor(private val repo: WTCountriesRepo) : ViewModel() {
         repo.refreshNewCountries()
     }
 
+    fun fetchFromCache() = launchLoadNewCountries {
+        repo.fetchCachedCountriesInfo()
+    }
+
+
     private fun launchLoadNewCountries(completion: suspend () -> Unit) {
         viewModelScope.launch {
             try {

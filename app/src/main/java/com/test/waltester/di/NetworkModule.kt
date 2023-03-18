@@ -17,7 +17,7 @@ object NetworkModule {
 
     @Singleton
     @Provides
-    fun provideHttpClient(): OkHttpClient {
+    fun provideHttpClient(): OkHttpClient? {
         return OkHttpClient
             .Builder()
             .readTimeout(15, TimeUnit.SECONDS)
@@ -27,24 +27,26 @@ object NetworkModule {
 
     @Singleton
     @Provides
-    fun provideConverterFactory(): GsonConverterFactory =
+    fun provideConverterFactory(): GsonConverterFactory? =
         GsonConverterFactory.create()
 
     @Singleton
     @Provides
     fun provideRetrofit(
-        okHttpClient: OkHttpClient,
-        gsonConverterFactory: GsonConverterFactory
-    ): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl("https://gist.githubusercontent.com/peymano-wmt/32dcb892b06648910ddd40406e37fdab/raw/db25946fd77c5873b0303b858e861ce724e0dcd0/")
-            .client(okHttpClient)
-            .addConverterFactory(gsonConverterFactory)
-            .build()
+        okHttpClient: OkHttpClient?,
+        gsonConverterFactory: GsonConverterFactory?
+    ): Retrofit? {
+        return if (okHttpClient != null && gsonConverterFactory != null) {
+            Retrofit.Builder()
+                .baseUrl("https://gist.githubusercontent.com/peymano-wmt/32dcb892b06648910ddd40406e37fdab/raw/db25946fd77c5873b0303b858e861ce724e0dcd0/")
+                .client(okHttpClient)
+                .addConverterFactory(gsonConverterFactory)
+                .build()
+        } else null
     }
 
     @Singleton
     @Provides
-    fun provideWTNetworker(retrofit: Retrofit): WTNetworker =
-        retrofit.create(WTNetworker::class.java)
+    fun provideWTNetworker(retrofit: Retrofit?): WTNetworker? =
+        retrofit?.create(WTNetworker::class.java)
 }
